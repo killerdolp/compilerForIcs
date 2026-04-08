@@ -1,8 +1,10 @@
+
 #include <stdio.h>
 #include <string.h>
 
 char tempString[256];
 char actString[256];
+static int indexTemp = 0;
 
 // Possible states
 typedef enum
@@ -61,7 +63,6 @@ static void transition(FSM *fsm, char input) {
             }
             break;
         default:
-                printf("Current state: %d. Char input: %c\n", fsm->current_state, input);
             break;
     }
 }
@@ -83,6 +84,7 @@ static int epsilon_transition(FSM *fsm) {
             fsm->current_state = START;
             printf("Transitioned to START state via epsilon.\n");     
             break;
+
         default:
             break;
     }
@@ -111,25 +113,32 @@ void clear_temp_string(){
 // save to tempString
 void save_temp_string(FSM *fsm, char input)
 {
-    static int indexTemp = 0;
-    if (fsm->current_state == SAVE_TEMP)
-    {
-        {
-            tempString[indexTemp++] = input;
-            tempString[indexTemp] = '\0'; // Null-terminate the string
-        }
-    }
+    tempString[indexTemp++] = input;
+    tempString[indexTemp] = '\0'; // Null-terminate the string
 }
 
-void save_act_string(FSM *fsm, char input)
+// save tempString to actString
+void save_act_string(FSM *fsm)
 {
-    if (fsm->current_state == SAVE_ACT)
+    // concatenate tempstring to actString
+    strcat(actString, tempString);
+}
+
+// perform the actions associated with each state of the FSM
+void perform_action(FSM *fsm, char current_input){
+    if (fsm->current_state == START)
     {
-        {
-           // concatenate tempstring to actString
-            strcat(actString, tempString);
-            tempString[0] = '\0'; // Clear tempString
-        }
+        clear_temp_string();
+    }
+    else if (fsm->current_state == SAVE_TEMP)
+    {
+        save_temp_string(fsm, current_input);
+    }
+    else if (fsm->current_state == SAVE_ACT)
+    {
+        remove_nbsp(tempString);
+        save_act_string(fsm);
+        clear_temp_string();
     }
 }
 
@@ -141,20 +150,15 @@ char *main_function(char *input)
     for (size_t i = 0; i < strlen(input); i++)
     {
         transition(&fsm, input[i]);
-
-        if (fsm.current_state == SAVE_TEMP)
-        {
-            save_temp_string(&fsm, input[i]);
-        }
-        else if (fsm.current_state == SAVE_ACT)
-        {
-            save_act_string(&fsm, input[i]);
-        }
-        else if (fsm.current_state == STOP)
-        {
-            break;
+        perform_action(&fsm, input[i]);
+        
+        // handles epsilon transitions, max 8 in a row
+        int guard = 0;
+        while (epsilon_transition(&fsm) && guard++ < 8) {
+            perform_action(&fsm, input[i]);
         }
     }
 
     return actString;
 }
+
