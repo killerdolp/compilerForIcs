@@ -24,72 +24,91 @@ typedef struct
 
 // Define transition function updating the FSM state
 // Following the logic of the FSM.
-void transition(FSM *fsm, char input)
-{
-    if (input == '>' && fsm->current_state == START)
-    {
-        fsm->current_state = DO_NOTHING;
-        printf("Transitioned to DO_NOTHING state. Char input: %c\n", input);
+static void transition(FSM *fsm, char input) {
+    switch (fsm->current_state) {
+        case START:
+            if (input == '>') {
+                fsm->current_state = DO_NOTHING;
+                printf("Transitioned to DO_NOTHING state. Char input: %c\n", input);
+            }
+            break;
+        case DO_NOTHING:
+            if (input == '\0') {
+                fsm->current_state = STOP;
+                printf("Transitioned to STOP state. Char input: %c\n", input);
+            }
+            else if (input == '<') {
+                fsm->current_state = CHECKER;
+                printf("Transitioned to CHECKER state. Char input: %c\n", input);
+            }
+            else if (input != '\n') {
+                fsm->current_state = SAVE_TEMP;
+                printf("Transitioned to SAVE_TEMP state. Char input: %c\n", input);
+            }
+            break;
+        case SAVE_TEMP:
+            if (input == '\n') {
+                fsm->current_state = DO_NOTHING;
+                printf("Transitioned to DO_NOTHING state. Char input: %c\n", input);
+            }
+            else if (input == '\0') {
+                fsm->current_state = STOP;
+                printf("Transitioned to STOP state. Char input: %c\n", input);
+            }
+            else if (input == '<') {
+                fsm->current_state = CHECKER;
+                printf("Transitioned to CHECKER state. Char input: %c\n", input);
+            }
+            break;
+        default:
+                printf("Current state: %d. Char input: %c\n", fsm->current_state, input);
+            break;
     }
-    else if (fsm->current_state == DO_NOTHING)
-    {
-        if (input == '\0')
-        {
-            fsm->current_state = STOP;
-            printf("Transitioned to STOP state. Char input: %c\n", input);
-        }
-        else if (input == '<')
-        {
-            fsm->current_state = CHECKER;
-            printf("Transitioned to CHECKER state. Char input: %c\n", input);
-        }
-        else if (input != '\n')
-        {
-            fsm->current_state = SAVE_TEMP;
-            printf("Transitioned to SAVE_TEMP state. Char input: %c\n", input);
-        }
-    }
-    else if (fsm->current_state == SAVE_TEMP)
-    {
-        if (input == '\n')
-        {
-            fsm->current_state = DO_NOTHING;
-            printf("Transitioned to DO_NOTHING state. Char input: %c\n", input);
-        }
-        else if (input == '\0')
-        {
-            fsm->current_state = STOP;
-            printf("Transitioned to STOP state. Char input: %c\n", input);
-        }
-        else if (input == '<')
-        {
-            fsm->current_state = CHECKER;
-            printf("Transitioned to CHECKER state. Char input: %c\n", input);
-        }
-    }
-
-    if (fsm->current_state == CHECKER)
-    {
-        printf("In CHECKER state. Char input:-%lli-\n", strlen(tempString));
-        if (strlen(tempString) == 1)
-        {
-            fsm->current_state = START;
-            printf("Transitioned to START state. Char input: %c\n", input);
-        }
-        else
-        {
-            fsm->current_state = SAVE_ACT;
-
-            printf("Transitioned to SAVE_ACT state. Char input: %c\n", input);
-        }
-
-        printf("Transitioned to SAVE_ACT state. Char input: %c\n", input);
-    }
-    printf("Current state: %d. Char input: %c\n", fsm->current_state, input);
 }
-// Repeat for every binary character, start in EVEN state.
-// Return 0 if odd number of zeroes and 1 otherwise.
 
+// Handles epsilon transitions (i.e. no input consumed)
+static int epsilon_transition(FSM *fsm) {
+    switch (fsm->current_state) {
+        case CHECKER:
+            if (indexTemp <= 1) {
+                fsm->current_state = START;
+                printf("Transitioned to START state via epsilon.\n");
+            } else {
+                fsm->current_state = SAVE_ACT;
+                printf("Transitioned to SAVE_ACT state via epsilon.\n");     
+            }
+            return 1;
+            break;
+        case SAVE_ACT:
+            fsm->current_state = START;
+            printf("Transitioned to START state via epsilon.\n");     
+            break;
+        default:
+            break;
+    }
+
+
+    return 0;
+}
+
+// removed nbsp characters from str
+void remove_nbsp(char *str) {
+    const char *target = "&nbsp";
+    size_t target_len = strlen(target);
+    char *pos = str;
+
+    while ((pos = strstr(pos, target)) != NULL) {
+        memmove(pos, pos + target_len, strlen(pos + target_len) + 1);
+    }
+}
+
+// resets tempString to empty, indexTemp to 0. To be used after the tempString is saved to actString or discarded.
+void clear_temp_string(){
+    tempString[0] = '\0'; // Clear tempString
+    indexTemp = 0;
+}
+
+// save to tempString
 void save_temp_string(FSM *fsm, char input)
 {
     static int indexTemp = 0;
@@ -118,6 +137,7 @@ char *main_function(char *input)
 {
     FSM fsm;
     fsm.current_state = START;
+    actString[0] = '\0'; // Initialize actString to empty
     for (size_t i = 0; i < strlen(input); i++)
     {
         transition(&fsm, input[i]);
@@ -137,12 +157,4 @@ char *main_function(char *input)
     }
 
     return actString;
-}
-
-int main()
-{
-    char input[] = "<td class=3D\"PSLEVEL2GRIDODDROW\" align=3D\"left \"> <div id=3D\"win0divMTG_LOC$101\"><span class=3D\"PSEDITBOX_DISPONLY\" id=3D\"MTG=_LOC$101\">Think Tank 8 (1.410)</span></div></td>";
-main_function(input);
-    printf("Extracted string: %s\n", actString);
-    return 0;
 }
