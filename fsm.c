@@ -31,38 +31,42 @@ static void transition(FSM *fsm, char input) {
         case START:
             if (input == '>') {
                 fsm->current_state = DO_NOTHING;
-                printf("Transitioned to DO_NOTHING state. Char input: %c\n", input);
+                //printf("Transitioned to DO_NOTHING state. Char input: %c\n", input);
             }
+            //printf("In %d state. Char input: %c\n", fsm->current_state, input);
             break;
         case DO_NOTHING:
             if (input == '\0') {
                 fsm->current_state = STOP;
-                printf("Transitioned to STOP state. Char input: %c\n", input);
+                //printf("Transitioned to STOP state. Char input: %c\n", input);
             }
             else if (input == '<') {
                 fsm->current_state = CHECKER;
-                printf("Transitioned to CHECKER state. Char input: %c\n", input);
+                //printf("Transitioned to CHECKER state. Char input: %c\n", input);
             }
-            else if (input != '\n') {
+            else if (input != '\n' && input != '\r') {
                 fsm->current_state = SAVE_TEMP;
-                printf("Transitioned to SAVE_TEMP state. Char input: %c\n", input);
+                //printf("Transitioned to SAVE_TEMP state. Char input: %c\n", input);
             }
+             //printf("In %d state. Char input: %c\n", fsm->current_state, input);
             break;
         case SAVE_TEMP:
-            if (input == '\n') {
+
+            if (input == '\n' || input == '\r') {
                 fsm->current_state = DO_NOTHING;
-                printf("Transitioned to DO_NOTHING state. Char input: %c\n", input);
+                //printf("Transitioned to DO_NOTHING state. Char input: %c\n", input);
             }
             else if (input == '\0') {
                 fsm->current_state = STOP;
-                printf("Transitioned to STOP state. Char input: %c\n", input);
+                //printf("Transitioned to STOP state. Char input: %c\n", input);
             }
             else if (input == '<') {
                 fsm->current_state = CHECKER;
-                printf("Transitioned to CHECKER state. Char input: %c\n", input);
+                //printf("Transitioned to CHECKER state. Char input: %c\n", input);
             }
             break;
         default:
+         //printf("In %d state. Char input: %c\n", fsm->current_state, input);
             break;
     }
 }
@@ -73,16 +77,16 @@ static int epsilon_transition(FSM *fsm) {
         case CHECKER:
             if (indexTemp <= 1) {
                 fsm->current_state = START;
-                printf("Transitioned to START state via epsilon.\n");
+                //printf("Transitioned to START state via epsilon.\n");
             } else {
                 fsm->current_state = SAVE_ACT;
-                printf("Transitioned to SAVE_ACT state via epsilon.\n");     
+                //printf("Transitioned to SAVE_ACT state via epsilon.\n");     
             }
             return 1;
             break;
         case SAVE_ACT:
             fsm->current_state = START;
-            printf("Transitioned to START state via epsilon.\n");     
+            //printf("Transitioned to START state via epsilon.\n");     
             break;
 
         default:
