@@ -89,6 +89,17 @@ static int epsilon_transition(FSM *fsm) {
     return 0;
 }
 
+// removed nbsp characters from str
+void remove_nbsp(char *str) {
+    const char *target = "&nbsp";
+    size_t target_len = strlen(target);
+    char *pos = str;
+
+    while ((pos = strstr(pos, target)) != NULL) {
+        memmove(pos, pos + target_len, strlen(pos + target_len) + 1);
+    }
+}
+
 // resets tempString to empty, indexTemp to 0. To be used after the tempString is saved to actString or discarded.
 void clear_temp_string(){
     tempString[0] = '\0'; // Clear tempString
@@ -98,25 +109,15 @@ void clear_temp_string(){
 // save to tempString
 void save_temp_string(FSM *fsm, char input)
 {
-    if (fsm->current_state == SAVE_TEMP)
-    {
-        {
-            tempString[indexTemp++] = input;
-            tempString[indexTemp] = '\0'; // Null-terminate the string
-        }
-    }
+    tempString[indexTemp++] = input;
+    tempString[indexTemp] = '\0'; // Null-terminate the string
 }
 
 // save tempString to actString
-void save_act_string(FSM *fsm, char input)
+void save_act_string(FSM *fsm)
 {
-    if (fsm->current_state == SAVE_ACT)
-    {
-        {
-           // concatenate tempstring to actString
-            strcat(actString, tempString);
-        }
-    }
+    // concatenate tempstring to actString
+    strcat(actString, tempString);
 }
 
 // perform the actions associated with each state of the FSM
@@ -131,7 +132,8 @@ void perform_action(FSM *fsm, char current_input){
     }
     else if (fsm->current_state == SAVE_ACT)
     {
-        save_act_string(fsm, current_input);
+        remove_nbsp(tempString);
+        save_act_string(fsm);
         clear_temp_string();
     }
 }
@@ -158,7 +160,7 @@ char *main_function(char *input)
 int main()
 {
     // char input[] = "<td class=3D\"PSLEVEL2GRIDODDROW\" align=3D\"left \"> <div id=3D\"win0divMTG_LOC$101\"><span class=3D\"PSEDITBOX_DISPONLY\" id=3D\"MTG=_LOC$101\">Think Tank 8 (1.410)</span></div></td>";
-    char input[] = "<td class=3D\"PSLEVEL2GRIDODDROW\" align=3D\"left\"> <div id=3D\"win0divMTG_SCHED$101\"><span class=3D\"PSEDITBOX_DISPONLY\" id=3D\"M=TG_SCHED$101\">Th 11:30AM - 1:30PM</span> </div></td> <td class=3D\"PSLEVEL2GRIDODDROW\" align=3D\"left\"> <div id=3D\"win0divMTG_LOC$101\"><span class=3D\"PSEDITBOX_DISPONLY\" id=3D\"MTG=_LOC$101\">Think Tank 8 (1.410)</span> </div></td>";
+    char input[] = "<td class=3D\"PSLEVEL2GRIDODDROW\" align=3D\"left\"> <div id=3D\"win0divMTG_SCHED$101\"> <span class=3D\"PSEDITBOX_DISPONLY\" id=3D\"M=TG_SCHED$101\">Th 11:30AM - 1:30PM</span> </div></td> <td class=3D\"PSLEVEL2GRIDODDROW\" align=3D\"left\"> <div id=3D\"win0divMTG_LOC$101\"><span class=3D\"PSEDITBOX_DISPONLY\" id=3D\"MTG=_LOC$101\">Think Tank 8 (1.410)</span> &nbsp</div></td>";
     main_function(input);
     printf("Extracted string: %s\n", actString);
     return 0;
