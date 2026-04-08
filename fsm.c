@@ -33,15 +33,20 @@ void transition(FSM *fsm, char input)
     }
     else if (fsm->current_state == DO_NOTHING)
     {
-        if (input != '\n')
-        {
-            fsm->current_state = SAVE_TEMP;
-            printf("Transitioned to SAVE_TEMP state. Char input: %c\n", input);
-        }
-        else if (input == '\0')
+        if (input == '\0')
         {
             fsm->current_state = STOP;
             printf("Transitioned to STOP state. Char input: %c\n", input);
+        }
+        else if (input == '<')
+        {
+            fsm->current_state = CHECKER;
+            printf("Transitioned to CHECKER state. Char input: %c\n", input);
+        }
+        else if (input != '\n')
+        {
+            fsm->current_state = SAVE_TEMP;
+            printf("Transitioned to SAVE_TEMP state. Char input: %c\n", input);
         }
     }
     else if (fsm->current_state == SAVE_TEMP)
@@ -80,6 +85,7 @@ void transition(FSM *fsm, char input)
 
         printf("Transitioned to SAVE_ACT state. Char input: %c\n", input);
     }
+    printf("Current state: %d. Char input: %c\n", fsm->current_state, input);
 }
 // Repeat for every binary character, start in EVEN state.
 // Return 0 if odd number of zeroes and 1 otherwise.
@@ -92,7 +98,6 @@ void save_temp_string(FSM *fsm, char input)
         {
             tempString[indexTemp++] = input;
             tempString[indexTemp] = '\0'; // Null-terminate the string
-            printf("Saved char to tempString: %c, tempString now: %s\n)", input, tempString);
         }
     }
 }
@@ -104,6 +109,7 @@ void save_act_string(FSM *fsm, char input)
     {
         {
             actString[index++] = input;
+            actString[index] = '\0'; // Null-terminate the string
         }
     }
 }
@@ -136,39 +142,7 @@ char *main_function(char *input)
 int main()
 {
     char input[] = "<td class=3D\"PSLEVEL2GRIDODDROW\" align=3D\"left \"> <div id=3D\"win0divMTG_LOC$101\"><span class=3D\"PSEDITBOX_DISPONLY\" id=3D\"MTG=_LOC$101\">Think Tank 8 (1.410)</span></div></td>";
-    main_function(input);
+main_function(input);
     printf("Extracted string: %s\n", actString);
     return 0;
 }
-
-// START FUNCTION
-/* int has_even_zeroes(FSM *fsm, const char *binary)
-{
-    fsm->current_state = START;
-    for (size_t i = 0; i < strlen(binary); i++)
-    {
-        transition(fsm, binary[i]);
-    }
-    return fsm->current_state == EVEN_STATE;
-} */
-
-// remove because main c is in another file
-/* // Main
-int main() {
-    // Ask user to enter a number (64-bit + null terminator)
-    char binary_input[65];
-    printf("Enter a binary number: ");
-    scanf("%64s", binary_input);
-
-    // Create an instance of the FSM
-    FSM fsm;
-
-    // Check for even number of zeroes and display print accordingly
-    if (has_even_zeroes(&fsm, binary_input)) {
-        printf("The binary number has an even number of zeroes.\n");
-    } else {
-        printf("The binary number has an odd number of zeroes.\n");
-    }
-
-    return 0;
-} */
