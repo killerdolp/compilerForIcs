@@ -104,12 +104,12 @@ void save_temp_string(FSM *fsm, char input)
 
 void save_act_string(FSM *fsm, char input)
 {
-    static int index = 0;
     if (fsm->current_state == SAVE_ACT)
     {
         {
-            actString[index++] = input;
-            actString[index] = '\0'; // Null-terminate the string
+           // concatenate tempstring to actString
+            strcat(actString, tempString);
+            tempString[0] = '\0'; // Clear tempString
         }
     }
 }
