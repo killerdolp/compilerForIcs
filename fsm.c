@@ -25,70 +25,6 @@ typedef struct
 
 // Define transition function updating the FSM state
 // Following the logic of the FSM.
-// void transition(FSM *fsm, char input)
-// {
-//     if (input == '>' && fsm->current_state == START)
-//     {
-//         fsm->current_state = DO_NOTHING;
-//         printf("Transitioned to DO_NOTHING state. Char input: %c\n", input);
-//     }
-//     else if (fsm->current_state == DO_NOTHING)
-//     {
-//         if (input == '\0')
-//         {
-//             fsm->current_state = STOP;
-//             printf("Transitioned to STOP state. Char input: %c\n", input);
-//         }
-//         else if (input == '<')
-//         {
-//             fsm->current_state = CHECKER;
-//             printf("Transitioned to CHECKER state. Char input: %c\n", input);
-//         }
-//         else if (input != '\n')
-//         {
-//             fsm->current_state = SAVE_TEMP;
-//             printf("Transitioned to SAVE_TEMP state. Char input: %c\n", input);
-//         }
-//     }
-//     else if (fsm->current_state == SAVE_TEMP)
-//     {
-//         if (input == '\n')
-//         {
-//             fsm->current_state = DO_NOTHING;
-//             printf("Transitioned to DO_NOTHING state. Char input: %c\n", input);
-//         }
-//         else if (input == '\0')
-//         {
-//             fsm->current_state = STOP;
-//             printf("Transitioned to STOP state. Char input: %c\n", input);
-//         }
-//         else if (input == '<')
-//         {
-//             fsm->current_state = CHECKER;
-//             printf("Transitioned to CHECKER state. Char input: %c\n", input);
-//         }
-//     }
-
-//     if (fsm->current_state == CHECKER) // "'bootstrap' to handle epsilon transition"
-//     {
-//         printf("In CHECKER state. Temp String: %s\n", tempString);
-//         if (strlen(tempString) == 1)
-//         {
-//             fsm->current_state = START;
-//             printf("Transitioned to START state. Char input: %c\n", input);
-//         }
-//         else
-//         {
-//             fsm->current_state = SAVE_ACT;
-
-//             printf("Transitioned to SAVE_ACT state. Char input: %c\n", input);
-//         }
-
-//         printf("Transitioned to SAVE_ACT state. Char input: %c\n", input);
-//     }
-//     // printf("Current state: %d. Char input: %c\n", fsm->current_state, input);
-// }
-
 static void transition(FSM *fsm, char input) {
     switch (fsm->current_state) {
         case START:
@@ -130,6 +66,7 @@ static void transition(FSM *fsm, char input) {
     }
 }
 
+// Handles epsilon transitions (i.e. no input consumed)
 static int epsilon_transition(FSM *fsm) {
     switch (fsm->current_state) {
         case CHECKER:
@@ -152,11 +89,13 @@ static int epsilon_transition(FSM *fsm) {
     return 0;
 }
 
+// resets tempString to empty, indexTemp to 0. To be used after the tempString is saved to actString or discarded.
 void clear_temp_string(){
     tempString[0] = '\0'; // Clear tempString
     indexTemp = 0;
 }
 
+// save to tempString
 void save_temp_string(FSM *fsm, char input)
 {
     if (fsm->current_state == SAVE_TEMP)
@@ -168,6 +107,7 @@ void save_temp_string(FSM *fsm, char input)
     }
 }
 
+// save tempString to actString
 void save_act_string(FSM *fsm, char input)
 {
     if (fsm->current_state == SAVE_ACT)
@@ -179,6 +119,7 @@ void save_act_string(FSM *fsm, char input)
     }
 }
 
+// perform the actions associated with each state of the FSM
 void perform_action(FSM *fsm, char current_input){
     if (fsm->current_state == START)
     {
@@ -193,10 +134,6 @@ void perform_action(FSM *fsm, char current_input){
         save_act_string(fsm, current_input);
         clear_temp_string();
     }
-    // else if (fsm->current_state == STOP)
-    // {
-    //     break;
-    // }
 }
 
 char *main_function(char *input)
@@ -206,19 +143,6 @@ char *main_function(char *input)
     for (size_t i = 0; i < strlen(input); i++)
     {
         transition(&fsm, input[i]);
-
-        // if (fsm.current_state == SAVE_TEMP)
-        // {
-        //     save_temp_string(&fsm, input[i]);
-        // }
-        // else if (fsm.current_state == SAVE_ACT)
-        // {
-        //     save_act_string(&fsm, input[i]);
-        // }
-        // else if (fsm.current_state == STOP)
-        // {
-        //     break;
-        // }
         perform_action(&fsm, input[i]);
         
         // handles epsilon transitions, max 8 in a row
