@@ -71,6 +71,8 @@ int main(int argc, char *argv[]) {
     raw[sz] = '\0';
     fclose(fp);
 
+
+    Event *eventList = NULL;
     /* QP decode */
     size_t html_len = 0;
     size_t schedule_len = 0;
@@ -87,7 +89,26 @@ int main(int argc, char *argv[]) {
     const char *ROW_CLOSE = "</tr>";
 
     // Sub Blocks
-    // for MTG_SCHED to get the sub block of the schedule, we can use the same approach as the main block, but with a different open/close tag. We can also just print the whole block for now, since we are not doing any parsing yet.
+
+    //use this to get the total size need for the arraay to store the STRUCT that can be passed to the ics converter
+    int total_blocks = 0;
+    const char *count_pos = html;
+    while (1) {
+        const char *start = strstr(count_pos, ROW_OPEN);
+        if (!start) break;
+
+        const char *end = strstr(start, ROW_CLOSE);
+        if (!end) break;
+        end += strlen(ROW_CLOSE);
+
+        total_blocks++;
+        count_pos = end;
+    }
+
+    //printf("Total blocks found: %d\n", total_blocks);
+
+    eventList = malloc(sizeof(Event) * total_blocks);
+
     const char *pos = html;
     int block = 0;
 
@@ -102,7 +123,7 @@ int main(int argc, char *argv[]) {
         end += strlen(ROW_CLOSE);   /* include </tr> itself */
 
         /* extract and print sub-blocks */
-        printf("=== BLOCK %d ===\n", block++);
+        //printf("=== BLOCK %d ===\n", block++);
         
         // Schedule
         const char *sched_pos = strstr(start, "MTG_SCHED$");
@@ -162,32 +183,55 @@ int main(int argc, char *argv[]) {
 
         
         
-        printf("\n");
+        //printf("\n");
         //free schedule
+
+
+
         if (schedule) {
             char* schedule_text = main_function(schedule);
-            printf("Schedule:\n%s\n", schedule_text);
+            eventList[block].schedule = malloc(strlen(schedule_text) + 1);
+            strcpy(eventList[block].schedule, schedule_text);
+            //printf("Schedule:%s\n", schedule_text);
             free(schedule);
             schedule = NULL;
         }
         if (location) {
             char* location_text = main_function(location);
-            printf("Location:\n%s\n", location_text);
+            eventList[block].location = malloc(strlen(location_text) + 1);
+            strcpy(eventList[block].location, location_text);
+            //printf("Location:%s\n", location_text);
             free(location);
             location = NULL;
         }
         if (description) {
             char *description_text = main_function(description);
-            printf("Description:\n%s\n", description_text);
+            eventList[block].description = malloc(strlen(description_text) + 1);
+            strcpy(eventList[block].description, description_text);
+            //printf("Description:%s\n", description_text);
             free(description);
             description = NULL;
         }
+        block ++;
 
         pos = end;
     }
 
-    fprintf(stderr, "Total blocks: %d\n", block);
+    //printf(stderr, "Total blocks: %d\n", block);
 
+    for(int j = 0; j < block; j++) {
+        printf("=== EVENT %d ===\n", j);
+        printf("Schedule: %s\n", eventList[j].schedule);
+        printf("Location: %s\n", eventList[j].location);
+        printf("Description: %s\n", eventList[j].description);
+    }
+
+    for(int i = 0; i < total_blocks; i++) {
+        free(eventList[i].schedule);
+        free(eventList[i].location);
+        free(eventList[i].description);
+    }
+    free(eventList);
     free(html);
     return 0;
 }
