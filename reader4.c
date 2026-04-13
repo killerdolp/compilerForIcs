@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "fsm.c"
 #include "header.h"
 
 /* place this in the header file later */

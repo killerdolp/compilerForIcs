@@ -14,7 +14,7 @@ https://code.visualstudio.com/docs/cpp/config-mingw
 
 `gcc --version`
 
-## Step 2: Get your calendar from MyPortal
+## Step 2: Retrieve your calendar from MyPortal
 
 1. Login to MyPortal. Under "My Record", click on "My Weekly Schedule".
 
@@ -34,12 +34,16 @@ https://code.visualstudio.com/docs/cpp/config-mingw
 
 ## Step 3: Compilation
 
-Compile the program using the following command:
+Compile the program using:
 
-`gcc reader4.c -o reader -ansi -pedantic -Wall -Werror`
+`make`
+
+or:
+
+`gcc fsm.c reader4.c -o reader -ansi -pedantic -Wall -Werror`
 
 ## Step 4: Running
 
-The program can be run with the following command:
+Run the program with the following command:
 
 `./reader`

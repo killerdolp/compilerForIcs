@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 
-char tempString[256];
-char actString[256];
+static char tempString[256];
+static char actString[256];
 static int indexTemp = 0;
 
 /* Possible states */
@@ -98,7 +98,7 @@ static int epsilon_transition(FSM *fsm) {
 }
 
 /* removed nbsp characters from str */
-void remove_nbsp(char *str) {
+static void remove_nbsp(char *str) {
     const char *target = "&nbsp";
     size_t target_len = strlen(target);
     char *pos = str;
@@ -109,27 +109,27 @@ void remove_nbsp(char *str) {
 }
 
 /* resets tempString to empty, indexTemp to 0. To be used after the tempString is saved to actString or discarded. */
-void clear_temp_string(){
+static void clear_temp_string(){
     tempString[0] = '\0'; /* Clear tempString */
     indexTemp = 0;
 }
 
 /* save to tempString */
-void save_temp_string(FSM *fsm, char input)
+static void save_temp_string(FSM *fsm, char input)
 {
     tempString[indexTemp++] = input;
     tempString[indexTemp] = '\0'; /* Null-terminate the string */
 }
 
 /* save tempString to actString */
-void save_act_string(FSM *fsm)
+static void save_act_string(FSM *fsm)
 {
     /* concatenate tempstring to actString */
     strcat(actString, tempString);
 }
 
 /* perform the actions associated with each state of the FSM */
-void perform_action(FSM *fsm, char current_input){
+static void perform_action(FSM *fsm, char current_input){
     if (fsm->current_state == START)
     {
         clear_temp_string();
