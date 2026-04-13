@@ -16,6 +16,40 @@
 // place this in the header file later
 char *main_function(char *input);
 
+static void split_date_range(const char *range, char **start_date, char **end_date) {
+    const char *sep;
+    size_t start_len;
+    size_t end_len;
+
+    *start_date = NULL;
+    *end_date = NULL;
+
+    if (!range) return;
+
+    sep = strstr(range, " - ");
+    if (!sep) {
+        *start_date = malloc(strlen(range) + 1);
+        if (*start_date) strcpy(*start_date, range);
+        return;
+    }
+
+    start_len = (size_t)(sep - range);
+    end_len = strlen(sep + 3);
+
+    *start_date = malloc(start_len + 1);
+    *end_date = malloc(end_len + 1);
+
+    if (*start_date) {
+        memcpy(*start_date, range, start_len);
+        (*start_date)[start_len] = '\0';
+    }
+
+    if (*end_date) {
+        memcpy(*end_date, sep + 3, end_len);
+        (*end_date)[end_len] = '\0';
+    }
+}
+
 // Quoted-Printable decoder
 static char *qp_decode(const char *src, size_t src_len, size_t *out_len) {
     char *dst = malloc(src_len + 1);
@@ -78,9 +112,11 @@ int main(int argc, char *argv[]) {
     size_t schedule_len = 0;
     size_t loc_len = 0;
     size_t desc_len = 0;
+    size_t date_len = 0;
     char *schedule = NULL;
     char *location = NULL;
     char *description = NULL;
+    char *date = NULL;
     char *html = qp_decode(raw, (size_t)sz, &html_len);
     free(raw);
 
@@ -107,7 +143,7 @@ int main(int argc, char *argv[]) {
 
     //printf("Total blocks found: %d\n", total_blocks);
 
-    eventList = malloc(sizeof(Event) * total_blocks);
+    eventList = calloc((size_t)total_blocks, sizeof(Event));
 
     const char *pos = html;
     int block = 0;
@@ -181,6 +217,26 @@ int main(int argc, char *argv[]) {
             }
         }
 
+                // Date
+        const char *date_pos = strstr(start, "MTG_DATES$");
+        if (date_pos && date_pos < end) {
+            const char *date_td = date_pos;
+            while (date_td > start && strncmp(date_td, "<td", 3) != 0) date_td--;
+            if (date_td >= start && strncmp(date_td, "<td", 3) == 0) {
+                const char *date_end = strstr(date_td, "</td>");
+                if (date_end) {
+                    date_end += 5;
+                    date_len = date_end - date_td;
+                    date = malloc(date_len + 1);
+                    if (date) {
+                        memcpy(date, date_td, date_len);
+                        date[date_len] = '\0';
+                    }
+                }
+            }
+        }
+        
+
         
         
         //printf("\n");
@@ -212,6 +268,13 @@ int main(int argc, char *argv[]) {
             free(description);
             description = NULL;
         }
+        if (date) {
+            char *date_text = main_function(date);
+            split_date_range(date_text, &eventList[block].dateStart, &eventList[block].dateEnd);
+            //printf("Date:%s\n", date_text);
+            free(date);
+            date = NULL;
+        }
         block ++;
 
         pos = end;
@@ -224,12 +287,17 @@ int main(int argc, char *argv[]) {
         printf("Schedule: %s\n", eventList[j].schedule);
         printf("Location: %s\n", eventList[j].location);
         printf("Description: %s\n", eventList[j].description);
+        // there is error handling here just in case date start or end is empty
+        printf("Date Start: %s\n", eventList[j].dateStart ? eventList[j].dateStart : ""); 
+        printf("Date End: %s\n", eventList[j].dateEnd ? eventList[j].dateEnd : "");
     }
 
     for(int i = 0; i < total_blocks; i++) {
         free(eventList[i].schedule);
         free(eventList[i].location);
         free(eventList[i].description);
+        free(eventList[i].dateStart);
+        free(eventList[i].dateEnd);
     }
     free(eventList);
     free(html);
