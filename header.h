@@ -1,4 +1,4 @@
-char *main_function(char *input);
+char *fsm_function(char *input);
 
 typedef struct{
     char * schedule;

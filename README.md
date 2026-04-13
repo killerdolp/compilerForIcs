@@ -1,2 +1,2 @@
 # compilerForIcs
-A C compiler for that converts txt with calanders / events into a ics file that can be used to be imported into calenders such as google calender
+A C program for that converts SUTD's MyPortal calendar into a standard .ics file that can be imported into sites such as Google Calender
