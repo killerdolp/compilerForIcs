@@ -30,7 +30,9 @@ static void split_date_range(const char *range, char **start_date, char **end_da
     sep = strstr(range, " - ");
     if (!sep) {
         *start_date = malloc(strlen(range) + 1);
-        if (*start_date) strcpy(*start_date, range);
+        if (*start_date) {
+            strcpy(*start_date, range);
+        }
         return;
     }
 

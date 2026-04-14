@@ -22,7 +22,8 @@ https://code.visualstudio.com/docs/cpp/config-mingw
 
 2. Click on "List View".
 
-<img width="587" height="260" alt="image" src="https://github.com/user-attachments/assets/136fe777-20d1-4f15-9274-c6580a54f7fa" />
+<img width="807" height="408" alt="image" src="https://github.com/user-attachments/assets/16aefca1-00f1-4273-bc3d-6b9b61170d16" />
+
 
 3. Right click and Save As Webpage, Single File.
 
