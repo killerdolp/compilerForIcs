@@ -1,2 +1,49 @@
 # compilerForIcs
-A C compiler for that converts txt with calanders / events into a ics file that can be used to be imported into calenders such as google calender
+A C program that converts SUTD's MyPortal calendar into a standard .ics file. This calendar can then be imported into sites such as Google Calender.
+
+## Step 1: Prerequisites
+
+First, ensure that your system has gcc installed. 
+
+**Windows + VS Code:** 
+https://code.visualstudio.com/docs/cpp/config-mingw
+
+**Mac:** TBC
+
+**Verify that GCC is installed by running in your terminal:**
+
+`gcc --version`
+
+## Step 2: Retrieve your calendar from MyPortal
+
+1. Login to MyPortal. Under "My Record", click on "My Weekly Schedule".
+
+<img width="587" height="260" alt="image" src="https://github.com/user-attachments/assets/73866587-a9d7-4fd2-ad7c-6b231789883d" />
+
+2. Click on "List View".
+
+<img width="587" height="260" alt="image" src="https://github.com/user-attachments/assets/136fe777-20d1-4f15-9274-c6580a54f7fa" />
+
+3. Right click and Save As Webpage, Single File.
+
+<img width="322" height="67" alt="image" src="https://github.com/user-attachments/assets/ec4981ad-c04d-4da5-94a5-5faba209bf4f" />
+
+4. Rename the file extension from `.mhtml` to `.html`
+
+<img width="207" height="30" alt="image" src="https://github.com/user-attachments/assets/b36c4c62-78b1-445f-898b-562a53b14a8b" />
+
+## Step 3: Compilation
+
+Compile the program using:
+
+`make`
+
+or:
+
+`gcc fsm.c reader4.c -o reader -ansi -pedantic -Wall -Werror`
+
+## Step 4: Running
+
+Run the program with the following command:
+
+`./reader`
