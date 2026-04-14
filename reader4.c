@@ -368,7 +368,7 @@ int main(int argc, char *argv[]) {
 
     print_errors();
 
-    for(i = 0; i < total_blocks; i++) {
+    for(i = 0; i < total_blocks_all_files; i++) {
         free(eventList[i].schedule);
         free(eventList[i].location);
         free(eventList[i].description);
