@@ -300,6 +300,8 @@ int main(int argc, char *argv[]) {
         printf("Date End: %s\n", eventList[j].dateEnd ? eventList[j].dateEnd : "");
     }
 
+    print_errors();
+
     for(i = 0; i < total_blocks; i++) {
         free(eventList[i].schedule);
         free(eventList[i].location);
