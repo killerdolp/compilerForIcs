@@ -237,5 +237,5 @@ char *fsm_function(char *input)
         }
     }
 
-    return actString , error ;
+    return actString  ;
 }
