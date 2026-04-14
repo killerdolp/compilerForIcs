@@ -117,7 +117,9 @@ static void clear_temp_string(){
 /* save to tempString */
 static void save_temp_string(FSM *fsm, char input)
 {
-    tempString[indexTemp++] = input;
+    if (indexTemp < (int)sizeof(tempString) - 1) {
+        tempString[indexTemp++] = input;
+    }
     tempString[indexTemp] = '\0'; /* Null-terminate the string */
 }
 
@@ -125,7 +127,8 @@ static void save_temp_string(FSM *fsm, char input)
 static void save_act_string(FSM *fsm)
 {
     /* concatenate tempstring to actString */
-    strcat(actString, tempString);
+    /* bounded concatenation ensures that actString does not overflow */
+    strncat(actString, tempString, sizeof(actString) - strlen(actString) - 1);
 }
 
 /* perform the actions associated with each state of the FSM */
@@ -149,11 +152,12 @@ static void perform_action(FSM *fsm, char current_input){
 char *fsm_function(char *input)
 {
     FSM fsm;
-    size_t i;
+    size_t i, inputLen;
     int guard;
     fsm.current_state = START;
     actString[0] = '\0'; /* Initialize actString to empty */
-    for (i = 0; i < strlen(input); i++)
+    inputLen = strlen(input);
+    for (i = 0; i < inputLen; i++)
     {
         transition(&fsm, input[i]);
         perform_action(&fsm, input[i]);
