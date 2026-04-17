@@ -12,8 +12,6 @@
 #include <string.h>
 #include "header.h"
 
-/* place this in the header file later */
-char *fsm_function(char *input);
 
 static void split_date_range(const char *range, char **start_date, char **end_date) {
     const char *sep;
@@ -94,11 +92,11 @@ static char *qp_decode(const char *src, size_t src_len, size_t *out_len) {
 /* main */
 int main(int argc, char *argv[]) {
     long sz;
-    char *raw, *schedule, *location, *description, *date, *html;
+    char *raw, *schedule, *location, *description, *date, *html, buf[512];
     Event *eventList;
     size_t html_len, schedule_len, loc_len, desc_len, date_len;
     const char *ROW_OPEN, *ROW_CLOSE, *count_pos, *start, *end, *pos, *sched_pos, *loc_pos, *desc_pos, *date_pos;
-    int total_blocks, block, i, j;
+    int total_blocks, block, i, j, rc;
     const char *filename = (argc > 1) ? argv[1] : "My Class Schedule.html";
 
     /* load */
@@ -251,34 +249,51 @@ int main(int argc, char *argv[]) {
         /* free schedule */
 
 
-
-        if (schedule) {
-            char* schedule_text = fsm_function(schedule);
-            eventList[block].schedule = malloc(strlen(schedule_text) + 1);
-            strcpy(eventList[block].schedule, schedule_text);
+        rc = fsm_function(schedule, buf, sizeof(buf));
+        if (rc != FSM_ACC) {
+            fprintf(stderr, "fsm error %d on block %d\n", rc, block);
+            eventList[block].schedule = malloc(6);
+            eventList[block].schedule = "Error";
+        } else {
+            eventList[block].schedule = malloc(strlen(buf) + 1);
+            strcpy(eventList[block].schedule, buf);
             /* printf("Schedule:%s\n", schedule_text); */
             free(schedule);
             schedule = NULL;
         }
-        if (location) {
-            char* location_text = fsm_function(location);
-            eventList[block].location = malloc(strlen(location_text) + 1);
-            strcpy(eventList[block].location, location_text);
-            /* printf("Location:%s\n", location_text); */
-            free(location);
-            location = NULL;
+        rc = fsm_function(location, buf, sizeof(buf));
+        if (rc != FSM_ACC) {
+            fprintf(stderr, "fsm error %d on block %d\n", rc, block);
+            eventList[block].location = malloc(6);
+            eventList[block].location = "Error";
+        } else {
+            eventList[block].location = malloc(strlen(buf) + 1);
+            strcpy(eventList[block].location, buf);
+            /* printf("Schedule:%s\n", schedule_text); */
+            free(schedule);
+            schedule = NULL;
         }
-        if (description) {
-            char *description_text = fsm_function(description);
-            eventList[block].description = malloc(strlen(description_text) + 1);
-            strcpy(eventList[block].description, description_text);
-            /* printf("Description:%s\n", description_text); */
-            free(description);
-            description = NULL;
+        rc = fsm_function(description, buf, sizeof(buf));
+        if (rc != FSM_ACC) {
+            fprintf(stderr, "fsm error %d on block %d\n", rc, block);
+            eventList[block].description = malloc(6);
+            eventList[block].description = "Error";
+        } else {
+            eventList[block].description = malloc(strlen(buf) + 1);
+            strcpy(eventList[block].description, buf);
+            /* printf("Schedule:%s\n", schedule_text); */
+            free(schedule);
+            schedule = NULL;
         }
-        if (date) {
-            char *date_text = fsm_function(date);
-            split_date_range(date_text, &eventList[block].dateStart, &eventList[block].dateEnd);
+        rc = fsm_function(date, buf, sizeof(buf));
+        if (rc != FSM_ACC) {
+            fprintf(stderr, "fsm error %d on block %d\n", rc, block);
+            eventList[block].dateStart = malloc(6);
+            eventList[block].dateStart = "Error";
+            eventList[block].dateEnd = malloc(6);
+            eventList[block].dateEnd = "Error";
+        } else {
+            split_date_range(buf, &eventList[block].dateStart, &eventList[block].dateEnd);
             /* printf("Date:%s\n", date_text); */
             free(date);
             date = NULL;

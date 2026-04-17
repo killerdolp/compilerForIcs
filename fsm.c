@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include "header.h"
 
 static char tempString[256];
 static char actString[256];
@@ -14,7 +15,8 @@ typedef enum
     SAVE_TEMP,
     CHECKER,
     SAVE_ACT,
-    STOP
+    STOP_EMPTY,
+    STOP_NONEMPTY
 } State;
 
 /* Define our FSM object, it has only one
@@ -37,7 +39,7 @@ static void transition(FSM *fsm, char input) {
             break;
         case DO_NOTHING:
             if (input == '\0') {
-                fsm->current_state = STOP;
+                fsm->current_state = STOP_EMPTY;
                 /* printf("Transitioned to STOP state. Char input: %c\n", input); */
             }
             else if (input == '<') {
@@ -53,11 +55,11 @@ static void transition(FSM *fsm, char input) {
         case SAVE_TEMP:
 
             if (input == '\n' || input == '\r') {
-                fsm->current_state = DO_NOTHING;
-                /* printf("Transitioned to DO_NOTHING state. Char input: %c\n", input); */
+                fsm->current_state = START;
+                /* printf("Transitioned to START state. Char input: %c\n", input); */
             }
             else if (input == '\0') {
-                fsm->current_state = STOP;
+                fsm->current_state = STOP_NONEMPTY;
                 /* printf("Transitioned to STOP state. Char input: %c\n", input); */
             }
             else if (input == '<') {
@@ -149,7 +151,7 @@ static void perform_action(FSM *fsm, char current_input){
     }
 }
 
-char *fsm_function(char *input)
+int fsm_function(const char *input, char *out_buf, size_t out_buf_size)
 {
     FSM fsm;
     size_t i, inputLen;
@@ -157,7 +159,7 @@ char *fsm_function(char *input)
     fsm.current_state = START;
     actString[0] = '\0'; /* Initialize actString to empty */
     inputLen = strlen(input);
-    for (i = 0; i < inputLen; i++)
+    for (i = 0; i <= inputLen; i++)
     {
         transition(&fsm, input[i]);
         perform_action(&fsm, input[i]);
@@ -167,7 +169,16 @@ char *fsm_function(char *input)
         while (epsilon_transition(&fsm) && guard++ < 8) {
             perform_action(&fsm, input[i]);
         }
-    }
 
-    return actString;
+        /* copy result out safely */
+        if (strlen(actString) >= out_buf_size) return FSM_BUF_OVERFLOW;
+        strcpy(out_buf, actString);
+    }
+    
+    if (fsm.current_state == STOP_EMPTY) {
+        return FSM_ACC; /*Return FSM_ACC if FSM stops at the only accepting state*/
+    }
+    else {
+        return FSM_NONACC; 
+    }
 }
