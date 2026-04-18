@@ -117,6 +117,7 @@ void clear_temp_string(){
 // save to tempString
 void save_temp_string(FSM *fsm, char input)
 {
+    (void)fsm;
     tempString[indexTemp++] = input;
     tempString[indexTemp] = '\0'; // Null-terminate the string
 }
@@ -124,6 +125,7 @@ void save_temp_string(FSM *fsm, char input)
 // save tempString to actString
 void save_act_string(FSM *fsm)
 {
+    (void)fsm;
     // concatenate tempstring to actString
     strcat(actString, tempString);
 }

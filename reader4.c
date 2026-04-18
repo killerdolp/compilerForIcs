@@ -12,6 +12,7 @@
 #include <string.h>
 #include "fsm.c"
 #include "header.h"
+#include "ics_writer.h"
 
 // place this in the header file later
 char *main_function(char *input);
@@ -92,6 +93,7 @@ static char *qp_decode(const char *src, size_t src_len, size_t *out_len) {
 // main
 int main(int argc, char *argv[]) {
     const char *filename = (argc > 1) ? argv[1] : "My Class Schedule.html";
+    const char *output_ics_filename = "Test Class Schedule.ics";
 
     /* load */
     FILE *fp = fopen(filename, "rb");
@@ -281,15 +283,11 @@ int main(int argc, char *argv[]) {
     }
 
     //printf(stderr, "Total blocks: %d\n", block);
-
-    for(int j = 0; j < block; j++) {
-        printf("=== EVENT %d ===\n", j);
-        printf("Schedule: %s\n", eventList[j].schedule);
-        printf("Location: %s\n", eventList[j].location);
-        printf("Description: %s\n", eventList[j].description);
-        // there is error handling here just in case date start or end is empty
-        printf("Date Start: %s\n", eventList[j].dateStart ? eventList[j].dateStart : ""); 
-        printf("Date End: %s\n", eventList[j].dateEnd ? eventList[j].dateEnd : "");
+    
+    if (convert_events_to_ics(output_ics_filename, eventList, (size_t)block) != 0) {
+        fprintf(stderr, "Failed to convert parsed events into ICS output.\n");
+    } else {
+        printf("Generated %s with parsed class events.\n", output_ics_filename);
     }
 
     for(int i = 0; i < total_blocks; i++) {
