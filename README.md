@@ -3,7 +3,7 @@ A C program that converts SUTD's MyPortal calendar into a standard .ics file. Th
 
 ## Step 1: Prerequisites
 
-First, ensure that your system has gcc installed. 
+1. First, ensure that your system has gcc installed. 
 
 **Windows + VS Code:** 
 https://code.visualstudio.com/docs/cpp/config-mingw
@@ -13,6 +13,10 @@ https://code.visualstudio.com/docs/cpp/config-mingw
 **Verify that GCC is installed by running in your terminal:**
 
 `gcc --version`
+
+2. Clone the program from GitHub:
+
+`git clone https://github.com/killerdolp/compilerForIcs.git`
 
 ## Step 2: Retrieve your calendar from MyPortal
 
@@ -35,6 +39,10 @@ https://code.visualstudio.com/docs/cpp/config-mingw
 
 ## Step 3: Compilation
 
+OPTIONAL: Clean existing binaries/temporary files using:
+
+`make clean`
+
 Compile the program using:
 
 `make`
@@ -48,3 +56,7 @@ or:
 Run the program with the following command:
 
 `./reader`
+
+If your .html file is not named 'My Class Schedule.html', specify its exact filename when running:
+
+`./reader <filename>.html`
