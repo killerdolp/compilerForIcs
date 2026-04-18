@@ -8,7 +8,12 @@ A C program that converts SUTD's MyPortal calendar into a standard .ics file. Th
 **Windows + VS Code:** 
 https://code.visualstudio.com/docs/cpp/config-mingw
 
-**Mac:** TBC
+**Mac:** 
+Run the code below in your terminal to install `make` and gcc
+```
+xcode-select --install
+```
+
 
 **Verify that GCC is installed by running in your terminal:**
 
