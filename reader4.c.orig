@@ -61,7 +61,6 @@ static char *qp_decode(const char *src, size_t src_len, size_t *out_len) {
     if (!dst) return NULL;
     r = w = 0;
 
-    size_t r = 0, w = 0;
     while (r < src_len) {
         unsigned char c = (unsigned char)src[r];
 
@@ -97,11 +96,14 @@ static char *qp_decode(const char *src, size_t src_len, size_t *out_len) {
 
 /* main */
 int main(int argc, char *argv[]) {
-    const char *filename = (argc > 1) ? argv[1] : "My Class Schedule.html";
-    const char *output_ics_filename = "Test Class Schedule.ics";
+<<<<<<< HEAD
     long sz;
     char *raw, *schedule, *location, *description, *date, *html , *filename;
     char html_files[100][256];
+=======
+    const char *filename = (argc > 1) ? argv[1] : "My Class Schedule.html";
+    const char *output_ics_filename = "Test Class Schedule.ics";
+>>>>>>> ics_writer
 
     Event *eventList;
     size_t html_len, schedule_len, loc_len, desc_len, date_len;
@@ -112,10 +114,6 @@ int main(int argc, char *argv[]) {
     int total_blocks_all_files = 0;
     int global_block_index = 0;
 
-    char *raw = malloc((size_t)sz + 1);
-    fread(raw, 1, (size_t)sz, fp);
-    raw[sz] = '\0';
-    fclose(fp);
 
 
     struct dirent *entry;
@@ -359,16 +357,10 @@ int main(int argc, char *argv[]) {
         pos = end;
     }
 
+<<<<<<< HEAD
     printf("Blocks found in this file: %d\n", block);
-    
     free(html);
     }  /* End of file processing loop */
-
-    if (convert_events_to_ics(output_ics_filename, eventList, (size_t)block) != 0) {
-        fprintf(stderr, "Failed to convert parsed events into ICS output.\n");
-    } else {
-        printf("Generated %s with parsed class events.\n", output_ics_filename);
-    }
 
     /* printf("\n========== All events from all files ==========\n"); */
     /* Run this if output needs to be checked */
@@ -380,6 +372,15 @@ int main(int argc, char *argv[]) {
         printf("Date Start: %s ", eventList[j].dateStart ? eventList[j].dateStart : ""); 
         printf("Date End: %s\n", eventList[j].dateEnd ? eventList[j].dateEnd : "");
     } */
+=======
+    //printf(stderr, "Total blocks: %d\n", block);
+    
+    if (convert_events_to_ics(output_ics_filename, eventList, (size_t)block) != 0) {
+        fprintf(stderr, "Failed to convert parsed events into ICS output.\n");
+    } else {
+        printf("Generated %s with parsed class events.\n", output_ics_filename);
+    }
+>>>>>>> ics_writer
 
     print_errors();
 

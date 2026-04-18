@@ -1,6 +1,7 @@
 #ifndef HEADER_H
 #define HEADER_H
 
+<<<<<<< HEAD
 #define MAX_ERROR_COUNT 128
 #define MAX_ERROR_LENGTH 256
 
@@ -24,3 +25,16 @@ typedef struct{
 } Event;
 
 #endif /* HEADER_H */
+=======
+char *main_function(char *input);
+
+typedef struct {
+    char *schedule;
+    char *location;
+    char *description;
+    char *dateEnd;
+    char *dateStart;
+} Event;
+
+#endif
+>>>>>>> ics_writer

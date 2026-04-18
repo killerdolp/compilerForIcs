@@ -170,20 +170,25 @@ static void clear_temp_string(){
 
 /* save to tempString */
 static void save_temp_string(char input)
-{   
-    (void)fsm;	
+{
+<<<<<<< HEAD
     if (indexTemp < (int)sizeof(tempString) - 1) {
         tempString[indexTemp++] = input;
     } else {
         add_error("Text is too long! " , tempString);
     }
     tempString[indexTemp] = '\0'; /* Null-terminate the string */
+=======
+    (void)fsm;
+    tempString[indexTemp++] = input;
+    tempString[indexTemp] = '\0'; // Null-terminate the string
+>>>>>>> ics_writer
 }
 
 /* save tempString to actString */
 static void save_act_string(void)
 {
-    (void)fsm;
+<<<<<<< HEAD
     size_t act_len;
     size_t temp_len;
     size_t remaining;
@@ -199,22 +204,27 @@ static void save_act_string(void)
     }
 
     strncat(actString, tempString, remaining);
+=======
+    (void)fsm;
+    // concatenate tempstring to actString
+    strcat(actString, tempString);
+>>>>>>> ics_writer
 }
 
-// perform the actions associated with each state of the FSM
-void perform_action(FSM *fsm, char current_input){
+/* perform the actions associated with each state of the FSM */
+static void perform_action(FSM *fsm, char current_input){
     if (fsm->current_state == START)
     {
         clear_temp_string();
     }
     else if (fsm->current_state == SAVE_TEMP)
     {
-        save_temp_string(fsm, current_input);
+        save_temp_string(current_input);
     }
     else if (fsm->current_state == SAVE_ACT)
     {
         remove_nbsp(tempString);
-        save_act_string(fsm);
+        save_act_string();
         clear_temp_string();
     }
 }
@@ -241,4 +251,3 @@ char *fsm_function(char *input)
 
     return actString  ;
 }
-

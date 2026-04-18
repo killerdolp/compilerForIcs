@@ -1,0 +1,44 @@
+<<<<<<< HEAD
+CFLAGS = -ansi -pedantic -Wall -Werror 
+OFILES = fsm.o reader4.o
+EXEFILES = reader.exe
+=======
+CC = gcc
+CFLAGS = -Wall -Wextra
+DEFAULT_HTML = My\ Class\ Schedule.html
+
+all: $(DEFAULT_HTML)
+
+reader4: reader4.c ics_writer.c
+	$(CC) $(CFLAGS) -o reader4 reader4.c ics_writer.c
+
+FORCE:
+
+%.html: reader4 FORCE
+	./reader4 "$@"
+
+test_ics_writer:
+	$(CC) $(CFLAGS) -o ics_writer_test ics_writer_test.c ics_writer.c
+	./ics_writer_test
+>>>>>>> ics_writer
+
+reader4: $(OFILES)
+	gcc $(OFILES) -o reader $(CFLAGS)
+fsm.o: fsm.c
+	gcc -c fsm.c -o fsm.o $(CFLAGS)
+reader4.o: reader4.c
+	gcc -c reader4.c -o reader4.o $(CFLAGS)
+clean:
+<<<<<<< HEAD
+	rm $(OFILES) $(EXEFILES)
+
+# all:
+# 	gcc -Wall -Wextra -o reader4 reader4.c
+
+# clean:
+# 	rm -f reader4 *.o
+=======
+	rm -f reader4 ics_writer_test *.o ics_writer_test_output.ics "Test Class Schedule.ics"
+
+.PHONY: all test_ics_writer clean FORCE
+>>>>>>> ics_writer
