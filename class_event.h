@@ -9,6 +9,7 @@ typedef struct {
     char summary[256];
     char location[256];
     char description[256];
+    char classTitle[256];
 } ClassEvent;
 
 #endif

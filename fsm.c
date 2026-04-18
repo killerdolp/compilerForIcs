@@ -88,6 +88,10 @@ static void transition(FSM *fsm, char input) {
                 fsm->current_state = DO_NOTHING;
                 /* printf("Transitioned to DO_NOTHING state. Char input: %c\n", input); */
             }
+            if (input == '\0') {
+                fsm->current_state = STOP_EMPTY;
+                /* printf("Transitioned to STOP state. Char input: %c\n", input); */
+            }
             /* printf("In %d state. Char input: %c\n", fsm->current_state, input); */
             break;
         case DO_NOTHING:

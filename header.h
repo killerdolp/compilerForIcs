@@ -26,6 +26,7 @@ typedef struct{
     char * description;
     char * dateStart;
     char * dateEnd;
+    char * classTitle;
 } Event;
 
 #endif /* HEADER_H */

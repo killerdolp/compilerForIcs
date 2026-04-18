@@ -15,6 +15,84 @@
 #include "header.h"
 #include "ics_writer.h"
 
+static int is_space_ascii(int c) {
+    return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == '\v';
+}
+
+static char *extract_group_title(const char *from, const char *limit) {
+    const char *marker;
+    const char *td_start;
+    const char *td_end;
+    const char *dash;
+    const char *title_start;
+    const char *title_end;
+    size_t td_len;
+    size_t out_len;
+    char *td_html;
+    char text_buf[512];
+    char *out;
+    int rc;
+
+    if (!from || !limit || from >= limit) {
+        return NULL;
+    }
+
+    marker = strstr(from, "class=\"PAGROUPDIVIDER\"");
+    if (!marker || marker >= limit) {
+        return NULL;
+    }
+
+    td_start = marker;
+    while (td_start > from && strncmp(td_start, "<td", 3) != 0) {
+        td_start--;
+    }
+    if (td_start < from || strncmp(td_start, "<td", 3) != 0) {
+        return NULL;
+    }
+
+    td_end = strstr(marker, "</td>");
+    if (!td_end || td_end >= limit) {
+        return NULL;
+    }
+    td_end += 5;
+
+    td_len = (size_t)(td_end - td_start);
+    td_html = malloc(td_len + 1);
+    if (!td_html) {
+        return NULL;
+    }
+
+    memcpy(td_html, td_start, td_len);
+    td_html[td_len] = '\0';
+
+    rc = fsm_function(td_html, text_buf, sizeof(text_buf));
+    free(td_html);
+    if (rc != FSM_ACC) {
+        return NULL;
+    }
+
+    dash = strchr(text_buf, '-');
+    title_start = dash ? (dash + 1) : text_buf;
+    while (*title_start && is_space_ascii((unsigned char)*title_start)) {
+        title_start++;
+    }
+
+    title_end = title_start + strlen(title_start);
+    while (title_end > title_start && is_space_ascii((unsigned char)*(title_end - 1))) {
+        title_end--;
+    }
+
+    out_len = (size_t)(title_end - title_start);
+    out = malloc(out_len + 1);
+    if (!out) {
+        return NULL;
+    }
+
+    memcpy(out, title_start, out_len);
+    out[out_len] = '\0';
+    return out;
+}
+
 
 static void split_date_range(const char *range, char **start_date, char **end_date) {
     const char *sep;
@@ -94,7 +172,7 @@ static char *qp_decode(const char *src, size_t src_len, size_t *out_len) {
 
 /* main */
 int main(int argc, char *argv[]) {
-    const char *output_ics_filename = "Test Class Schedule.ics";
+    const char *output_ics_filename = "Schedule.ics";
     long sz;
     char *raw, *schedule, *location, *description, *date, *html, buf[512];
     char *filename;
@@ -108,6 +186,7 @@ int main(int argc, char *argv[]) {
     int count_files = 0;
     int total_blocks_all_files = 0;
     int global_block_index = 0;
+    char *current_class_title = NULL;
 
 
     struct dirent *entry;
@@ -226,6 +305,14 @@ int main(int argc, char *argv[]) {
         start = strstr(pos, ROW_OPEN);
         if (!start) break;
 
+        {
+            char *next_group_title = extract_group_title(pos, start);
+            if (next_group_title) {
+                free(current_class_title);
+                current_class_title = next_group_title;
+            }
+        }
+
         /* find the matching closing tag */
         end = strstr(start, ROW_CLOSE);
         if (!end) break;
@@ -320,10 +407,14 @@ int main(int argc, char *argv[]) {
         if (rc != FSM_ACC) {
             fprintf(stderr, "fsm error %d on block %d\n", rc, block);
             eventList[global_block_index].schedule = malloc(6);
-            eventList[global_block_index].schedule = "Error";
+            if (eventList[global_block_index].schedule) {
+                strcpy(eventList[global_block_index].schedule, "Error");
+            }
         } else {
             eventList[global_block_index].schedule = malloc(strlen(buf) + 1);
-            strcpy(eventList[global_block_index].schedule, buf);
+            if (eventList[global_block_index].schedule) {
+                strcpy(eventList[global_block_index].schedule, buf);
+            }
             /* printf("Schedule:%s\n", schedule_text); */
             free(schedule);
             schedule = NULL;
@@ -332,33 +423,53 @@ int main(int argc, char *argv[]) {
         if (rc != FSM_ACC) {
             fprintf(stderr, "fsm error %d on block %d\n", rc, block);
             eventList[global_block_index].location = malloc(6);
-            eventList[global_block_index].location = "Error";
+            if (eventList[global_block_index].location) {
+                strcpy(eventList[global_block_index].location, "Error");
+            }
         } else {
             eventList[global_block_index].location = malloc(strlen(buf) + 1);
-            strcpy(eventList[global_block_index].location, buf);
+            if (eventList[global_block_index].location) {
+                strcpy(eventList[global_block_index].location, buf);
+            }
             /* printf("Schedule:%s\n", schedule_text); */
-            free(schedule);
-            schedule = NULL;
+            free(location);
+            location = NULL;
         }
+
+        if (current_class_title) {
+            eventList[global_block_index].classTitle = malloc(strlen(current_class_title) + 1);
+            if (eventList[global_block_index].classTitle) {
+                strcpy(eventList[global_block_index].classTitle, current_class_title);
+            }
+        }
+
         rc = fsm_function(description, buf, sizeof(buf));
         if (rc != FSM_ACC) {
             fprintf(stderr, "fsm error %d on block %d\n", rc, block);
             eventList[global_block_index].description = malloc(6);
-            eventList[global_block_index].description = "Error";
+            if (eventList[global_block_index].description) {
+                strcpy(eventList[global_block_index].description, "Error");
+            }
         } else {
             eventList[global_block_index].description = malloc(strlen(buf) + 1);
-            strcpy(eventList[global_block_index].description, buf);
+            if (eventList[global_block_index].description) {
+                strcpy(eventList[global_block_index].description, buf);
+            }
             /* printf("Schedule:%s\n", schedule_text); */
-            free(schedule);
-            schedule = NULL;
+            free(description);
+            description = NULL;
         }
         rc = fsm_function(date, buf, sizeof(buf));
         if (rc != FSM_ACC) {
             fprintf(stderr, "fsm error %d on block %d\n", rc, block);
             eventList[global_block_index].dateStart = malloc(6);
-            eventList[global_block_index].dateStart = "Error";
+            if (eventList[global_block_index].dateStart) {
+                strcpy(eventList[global_block_index].dateStart, "Error");
+            }
             eventList[global_block_index].dateEnd = malloc(6);
-            eventList[global_block_index].dateEnd = "Error";
+            if (eventList[global_block_index].dateEnd) {
+                strcpy(eventList[global_block_index].dateEnd, "Error");
+            }
         } else {
             split_date_range(buf, &eventList[global_block_index].dateStart, &eventList[global_block_index].dateEnd);
             /* printf("Date:%s\n", date_text); */
@@ -373,6 +484,8 @@ int main(int argc, char *argv[]) {
     }
 
     printf("Blocks found in this file: %d\n", block);
+    free(current_class_title);
+    current_class_title = NULL;
     
     free(html);
     }  /* End of file processing loop */
@@ -402,6 +515,7 @@ int main(int argc, char *argv[]) {
         free(eventList[i].description);
         free(eventList[i].dateStart);
         free(eventList[i].dateEnd);
+        free(eventList[i].classTitle);
     }
     free(eventList);
 

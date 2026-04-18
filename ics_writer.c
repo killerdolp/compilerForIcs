@@ -492,11 +492,13 @@ int convert_events_to_ics(const char *output_path, const Event *events, size_t e
       format_dt(ce.dtstart, sizeof(ce.dtstart), current_year, current_month, current_day, start_hour, start_min);
       format_dt(ce.dtend, sizeof(ce.dtend), current_year, current_month, current_day, end_hour, end_min);
 
-      pick_summary(events[i].schedule ? events[i].schedule : "Class", ce.summary, sizeof(ce.summary));
+      pick_summary(events[i].classTitle ? events[i].classTitle : (events[i].schedule ? events[i].schedule : "Class"), ce.summary, sizeof(ce.summary));
       strncpy(ce.location, events[i].location ? events[i].location : "TBA", sizeof(ce.location) - 1);
       ce.location[sizeof(ce.location) - 1] = '\0';
       strncpy(ce.description, events[i].description ? events[i].description : "", sizeof(ce.description) - 1);
       ce.description[sizeof(ce.description) - 1] = '\0';
+      strncpy(ce.classTitle, events[i].classTitle ? events[i].classTitle : "", sizeof(ce.classTitle) - 1);
+      ce.classTitle[sizeof(ce.classTitle) - 1] = '\0';
 
       out_events[out_count++] = ce;
 
