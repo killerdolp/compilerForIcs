@@ -8,6 +8,17 @@ typedef enum {
 } FSMResult;
 
 int fsm_function(const char *input, char *out_buf, size_t out_buf_size);
+#define MAX_ERROR_COUNT 128
+#define MAX_ERROR_LENGTH 256
+
+extern char error_messages[MAX_ERROR_COUNT][MAX_ERROR_LENGTH];
+extern char error_contexts[MAX_ERROR_COUNT][MAX_ERROR_LENGTH];
+extern int error_message_counts[MAX_ERROR_COUNT];
+extern int error_count;
+
+void add_error(const char *message, const char *context);
+void clear_errors(void);
+void print_errors(void);
 
 typedef struct{
     char * schedule;

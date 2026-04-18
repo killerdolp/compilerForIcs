@@ -10,7 +10,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <dirent.h>
+
 #include "header.h"
+#include "ics_writer.h"
 
 
 static void split_date_range(const char *range, char **start_date, char **end_date) {
@@ -91,68 +94,132 @@ static char *qp_decode(const char *src, size_t src_len, size_t *out_len) {
 
 /* main */
 int main(int argc, char *argv[]) {
+    const char *output_ics_filename = "Test Class Schedule.ics";
     long sz;
     char *raw, *schedule, *location, *description, *date, *html, buf[512];
+    char *filename;
+    char html_files[100][256];
+
     Event *eventList;
     size_t html_len, schedule_len, loc_len, desc_len, date_len;
     const char *ROW_OPEN, *ROW_CLOSE, *count_pos, *start, *end, *pos, *sched_pos, *loc_pos, *desc_pos, *date_pos;
-    int total_blocks, block, i, j, rc;
-    const char *filename = (argc > 1) ? argv[1] : "My Class Schedule.html";
-
-    /* load */
-    FILE *fp = fopen(filename, "rb");
-    if (!fp) { perror(filename); return 1; }
-    fseek(fp, 0, SEEK_END);
-    sz = ftell(fp);
-    rewind(fp);
-
-    raw = malloc((size_t)sz + 1);
-    fread(raw, 1, (size_t)sz, fp);
-    raw[sz] = '\0';
-    fclose(fp);
+    int block, i, k, rc;
+    FILE *fp;
+    int count_files = 0;
+    int total_blocks_all_files = 0;
+    int global_block_index = 0;
 
 
-    eventList = NULL;
-    /* QP decode */
-    html_len = 0;
-    schedule_len = 0;
-    loc_len = 0;
-    desc_len = 0;
-    date_len = 0;
-    schedule = NULL;
-    location = NULL;
-    description = NULL;
-    date = NULL;
-    html = qp_decode(raw, (size_t)sz, &html_len);
-    free(raw);
+    struct dirent *entry;
+    DIR *dir = opendir("."); /*  current directory */
 
-    /* scan for <tr id="trCLASS_MTG_VW ... </tr> timetable blocks */
-    ROW_OPEN = "<tr id=\"trCLASS_MTG_VW";
-    ROW_CLOSE = "</tr>";
-
-    /* Sub Blocks */
-
-    /* use this to get the total size need for the arraay to store the STRUCT that can be passed to the ics converter */
-    total_blocks = 0;
-    count_pos = html;
-    while (1) {
-        start = strstr(count_pos, ROW_OPEN);
-        if (!start) break;
-
-        end = strstr(start, ROW_CLOSE);
-        if (!end) break;
-        end += strlen(ROW_CLOSE);
-
-        total_blocks++;
-        count_pos = end;
+    if (dir == NULL) {
+        printf("Could not open directory\n");
+        return 1;
     }
 
-    /* printf("Total blocks found: %d\n", total_blocks); */
+    /* Array to store file names (simple version) */
 
-    eventList = calloc((size_t)total_blocks, sizeof(Event));
+    while ((entry = readdir(dir)) != NULL) {
+        char *name = entry->d_name;
 
-    pos = html;
-    block = 0;
+        /* Check if file ends with ".html" */
+        int len = strlen(name);
+        if (len > 5 && strcmp(name + len - 5, ".html") == 0) {
+            strcpy(html_files[count_files], name);
+            printf("Found HTML file: %s\n", name);
+            count_files++;
+        }
+    }
+
+    closedir(dir);
+
+
+    /* Error handling for HTML files   */
+    if (count_files == 0) { fprintf(stderr, "No HTML files found.\n"); return 1; }
+    if (count_files > 1) { fprintf(stderr, "Multiple HTML files found. Processing Both.\n"); }
+   /*  Print results */
+
+    /* First pass: count total blocks across all files */
+    
+    for (k = 0; k < count_files; k++) {
+        filename = html_files[k];
+        printf("Scanning file: %s\n", filename);
+
+        /* load */
+        fp = fopen(filename, "rb");
+        if (!fp) { perror(filename); continue; }
+        fseek(fp, 0, SEEK_END);
+        sz = ftell(fp);
+        rewind(fp);
+
+        raw = malloc((size_t)sz + 1);
+        fread(raw, 1, (size_t)sz, fp);
+        raw[sz] = '\0';
+        fclose(fp);
+
+        html = qp_decode(raw, (size_t)sz, &html_len);
+        free(raw);
+
+        if (!html) continue;
+
+        /* Count blocks in this file */
+        ROW_OPEN = "<tr id=\"trCLASS_MTG_VW";
+        ROW_CLOSE = "</tr>";
+        count_pos = html;
+        while (1) {
+            start = strstr(count_pos, ROW_OPEN);
+            if (!start) break;
+            end = strstr(start, ROW_CLOSE);
+            if (!end) break;
+            end += strlen(ROW_CLOSE);
+            total_blocks_all_files++;
+            count_pos = end;
+        }
+
+        free(html);
+    }
+
+    printf("Total blocks found in all files: %d\n\n", total_blocks_all_files);
+
+    /* Allocate eventList once for all files */
+    eventList = calloc((size_t)total_blocks_all_files, sizeof(Event));
+
+    /* Second pass: process all files and fill eventList */
+
+    for (k = 0; k < count_files; k++) {
+        filename = html_files[k];
+
+        printf("========== Processing file: %s ==========\n", filename);
+
+        /* load */
+        fp = fopen(filename, "rb");
+        if (!fp) { perror(filename); continue; }
+        fseek(fp, 0, SEEK_END);
+        sz = ftell(fp);
+        rewind(fp);
+
+        raw = malloc((size_t)sz + 1);
+        fread(raw, 1, (size_t)sz, fp);
+        raw[sz] = '\0';
+        fclose(fp);
+
+        /* QP decode */
+        schedule = NULL;
+        location = NULL;
+        description = NULL;
+        date = NULL;
+        html = qp_decode(raw, (size_t)sz, &html_len);
+        free(raw);
+
+        if (!html) continue;
+
+        /* scan for <tr id="trCLASS_MTG_VW ... </tr> timetable blocks */
+        ROW_OPEN = "<tr id=\"trCLASS_MTG_VW";
+        ROW_CLOSE = "</tr>";
+
+        pos = html;
+        block = 0;
 
     while (1) {
         /* find next opening tag */
@@ -252,11 +319,11 @@ int main(int argc, char *argv[]) {
         rc = fsm_function(schedule, buf, sizeof(buf));
         if (rc != FSM_ACC) {
             fprintf(stderr, "fsm error %d on block %d\n", rc, block);
-            eventList[block].schedule = malloc(6);
-            eventList[block].schedule = "Error";
+            eventList[global_block_index].schedule = malloc(6);
+            eventList[global_block_index].schedule = "Error";
         } else {
-            eventList[block].schedule = malloc(strlen(buf) + 1);
-            strcpy(eventList[block].schedule, buf);
+            eventList[global_block_index].schedule = malloc(strlen(buf) + 1);
+            strcpy(eventList[global_block_index].schedule, buf);
             /* printf("Schedule:%s\n", schedule_text); */
             free(schedule);
             schedule = NULL;
@@ -264,11 +331,11 @@ int main(int argc, char *argv[]) {
         rc = fsm_function(location, buf, sizeof(buf));
         if (rc != FSM_ACC) {
             fprintf(stderr, "fsm error %d on block %d\n", rc, block);
-            eventList[block].location = malloc(6);
-            eventList[block].location = "Error";
+            eventList[global_block_index].location = malloc(6);
+            eventList[global_block_index].location = "Error";
         } else {
-            eventList[block].location = malloc(strlen(buf) + 1);
-            strcpy(eventList[block].location, buf);
+            eventList[global_block_index].location = malloc(strlen(buf) + 1);
+            strcpy(eventList[global_block_index].location, buf);
             /* printf("Schedule:%s\n", schedule_text); */
             free(schedule);
             schedule = NULL;
@@ -276,11 +343,11 @@ int main(int argc, char *argv[]) {
         rc = fsm_function(description, buf, sizeof(buf));
         if (rc != FSM_ACC) {
             fprintf(stderr, "fsm error %d on block %d\n", rc, block);
-            eventList[block].description = malloc(6);
-            eventList[block].description = "Error";
+            eventList[global_block_index].description = malloc(6);
+            eventList[global_block_index].description = "Error";
         } else {
-            eventList[block].description = malloc(strlen(buf) + 1);
-            strcpy(eventList[block].description, buf);
+            eventList[global_block_index].description = malloc(strlen(buf) + 1);
+            strcpy(eventList[global_block_index].description, buf);
             /* printf("Schedule:%s\n", schedule_text); */
             free(schedule);
             schedule = NULL;
@@ -288,34 +355,48 @@ int main(int argc, char *argv[]) {
         rc = fsm_function(date, buf, sizeof(buf));
         if (rc != FSM_ACC) {
             fprintf(stderr, "fsm error %d on block %d\n", rc, block);
-            eventList[block].dateStart = malloc(6);
-            eventList[block].dateStart = "Error";
-            eventList[block].dateEnd = malloc(6);
-            eventList[block].dateEnd = "Error";
+            eventList[global_block_index].dateStart = malloc(6);
+            eventList[global_block_index].dateStart = "Error";
+            eventList[global_block_index].dateEnd = malloc(6);
+            eventList[global_block_index].dateEnd = "Error";
         } else {
-            split_date_range(buf, &eventList[block].dateStart, &eventList[block].dateEnd);
+            split_date_range(buf, &eventList[global_block_index].dateStart, &eventList[global_block_index].dateEnd);
             /* printf("Date:%s\n", date_text); */
             free(date);
             date = NULL;
         }
-        block ++;
+        
+        block++;
+        global_block_index++;
 
         pos = end;
     }
 
-    /* printf(stderr, "Total blocks: %d\n", block); */
+    printf("Blocks found in this file: %d\n", block);
+    
+    free(html);
+    }  /* End of file processing loop */
 
-    for(j = 0; j < block; j++) {
-        printf("=== EVENT %d ===\n", j);
-        printf("Schedule: %s\n", eventList[j].schedule);
-        printf("Location: %s\n", eventList[j].location);
-        printf("Description: %s\n", eventList[j].description);
-        /* there is error handling here just in case date start or end is empty */
-        printf("Date Start: %s\n", eventList[j].dateStart ? eventList[j].dateStart : ""); 
-        printf("Date End: %s\n", eventList[j].dateEnd ? eventList[j].dateEnd : "");
+    if (convert_events_to_ics(output_ics_filename, eventList, (size_t)global_block_index) != 0) {
+        fprintf(stderr, "Failed to convert parsed events into ICS output.\n");
+    } else {
+        printf("Generated %s with parsed class events.\n", output_ics_filename);
     }
 
-    for(i = 0; i < total_blocks; i++) {
+    /* printf("\n========== All events from all files ==========\n"); */
+    /* Run this if output needs to be checked */
+    /*    for(j = 0; j < total_blocks_all_files; j++) {
+        printf("=== EVENT %d ===\n", j);
+        printf("Schedule: %s ", eventList[j].schedule);
+        printf("Location: %s ", eventList[j].location);
+        printf("Description: %s ", eventList[j].description);
+        printf("Date Start: %s ", eventList[j].dateStart ? eventList[j].dateStart : ""); 
+        printf("Date End: %s\n", eventList[j].dateEnd ? eventList[j].dateEnd : "");
+    } */
+
+    print_errors();
+
+    for(i = 0; i < total_blocks_all_files; i++) {
         free(eventList[i].schedule);
         free(eventList[i].location);
         free(eventList[i].description);
@@ -323,6 +404,7 @@ int main(int argc, char *argv[]) {
         free(eventList[i].dateEnd);
     }
     free(eventList);
-    free(html);
+
+    /* printf("\n========== Processing complete ==========\n"); */
     return 0;
 }
