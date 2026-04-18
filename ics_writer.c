@@ -305,6 +305,10 @@ static void pick_summary(const char *schedule, char *summary, size_t summary_siz
 {
   char copy[512];
   char *line;
+  int sh;
+  int sm;
+  int eh;
+  int em;
 
   summary[0] = '\0';
   if (!schedule) {
@@ -317,7 +321,7 @@ static void pick_summary(const char *schedule, char *summary, size_t summary_siz
   line = strtok(copy, "\r\n");
   while (line) {
     trim_in_place(line);
-    if (line[0] != '\0' && !parse_time_range(line, &(int){0}, &(int){0}, &(int){0}, &(int){0})) {
+    if (line[0] != '\0' && !parse_time_range(line, &sh, &sm, &eh, &em)) {
       strncpy(summary, line, summary_size - 1);
       summary[summary_size - 1] = '\0';
       return;

@@ -163,7 +163,7 @@ static void remove_nbsp(char *str) {
 }
 
 /* resets tempString to empty, indexTemp to 0. To be used after the tempString is saved to actString or discarded. */
-static void clear_temp_string(){
+static void clear_temp_string(void){
     tempString[0] = '\0'; /* Clear tempString */
     indexTemp = 0;
 }
@@ -171,7 +171,6 @@ static void clear_temp_string(){
 /* save to tempString */
 static void save_temp_string(char input)
 {   
-    (void)fsm;	
     if (indexTemp < (int)sizeof(tempString) - 1) {
         tempString[indexTemp++] = input;
     } else {
@@ -183,7 +182,6 @@ static void save_temp_string(char input)
 /* save tempString to actString */
 static void save_act_string(void)
 {
-    (void)fsm;
     size_t act_len;
     size_t temp_len;
     size_t remaining;
@@ -201,7 +199,7 @@ static void save_act_string(void)
     strncat(actString, tempString, remaining);
 }
 
-// perform the actions associated with each state of the FSM
+/* perform the actions associated with each state of the FSM */
 void perform_action(FSM *fsm, char current_input){
     if (fsm->current_state == START)
     {
@@ -209,12 +207,12 @@ void perform_action(FSM *fsm, char current_input){
     }
     else if (fsm->current_state == SAVE_TEMP)
     {
-        save_temp_string(fsm, current_input);
+        save_temp_string(current_input);
     }
     else if (fsm->current_state == SAVE_ACT)
     {
         remove_nbsp(tempString);
-        save_act_string(fsm);
+        save_act_string();
         clear_temp_string();
     }
 }

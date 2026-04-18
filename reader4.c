@@ -61,7 +61,6 @@ static char *qp_decode(const char *src, size_t src_len, size_t *out_len) {
     if (!dst) return NULL;
     r = w = 0;
 
-    size_t r = 0, w = 0;
     while (r < src_len) {
         unsigned char c = (unsigned char)src[r];
 
@@ -97,10 +96,10 @@ static char *qp_decode(const char *src, size_t src_len, size_t *out_len) {
 
 /* main */
 int main(int argc, char *argv[]) {
-    const char *filename = (argc > 1) ? argv[1] : "My Class Schedule.html";
     const char *output_ics_filename = "Test Class Schedule.ics";
     long sz;
-    char *raw, *schedule, *location, *description, *date, *html , *filename;
+    char *raw, *schedule, *location, *description, *date, *html;
+    char *filename;
     char html_files[100][256];
 
     Event *eventList;
@@ -112,11 +111,6 @@ int main(int argc, char *argv[]) {
     int total_blocks_all_files = 0;
     int global_block_index = 0;
 
-    char *raw = malloc((size_t)sz + 1);
-    fread(raw, 1, (size_t)sz, fp);
-    raw[sz] = '\0';
-    fclose(fp);
-
 
     struct dirent *entry;
     DIR *dir = opendir("."); /*  current directory */
@@ -126,17 +120,24 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    /* Array to store file names (simple version) */
+    /* If a file is provided, only process that file. Otherwise process all .html files. */
+    if (argc > 1) {
+        strncpy(html_files[0], argv[1], sizeof(html_files[0]) - 1);
+        html_files[0][sizeof(html_files[0]) - 1] = '\0';
+        count_files = 1;
+        printf("Using provided HTML file: %s\n", html_files[0]);
+    } else {
+        /* Array to store file names (simple version) */
+        while ((entry = readdir(dir)) != NULL) {
+            char *name = entry->d_name;
+            int len = strlen(name);
 
-    while ((entry = readdir(dir)) != NULL) {
-        char *name = entry->d_name;
-
-        /* Check if file ends with ".html" */
-        int len = strlen(name);
-        if (len > 5 && strcmp(name + len - 5, ".html") == 0) {
-            strcpy(html_files[count_files], name);
-            printf("Found HTML file: %s\n", name);
-            count_files++;
+            /* Check if file ends with ".html" */
+            if (len > 5 && strcmp(name + len - 5, ".html") == 0) {
+                strcpy(html_files[count_files], name);
+                printf("Found HTML file: %s\n", name);
+                count_files++;
+            }
         }
     }
 
@@ -364,7 +365,7 @@ int main(int argc, char *argv[]) {
     free(html);
     }  /* End of file processing loop */
 
-    if (convert_events_to_ics(output_ics_filename, eventList, (size_t)block) != 0) {
+    if (convert_events_to_ics(output_ics_filename, eventList, (size_t)global_block_index) != 0) {
         fprintf(stderr, "Failed to convert parsed events into ICS output.\n");
     } else {
         printf("Generated %s with parsed class events.\n", output_ics_filename);
