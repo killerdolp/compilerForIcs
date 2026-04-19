@@ -54,7 +54,7 @@ Compile the program using:
 
 or:
 
-`gcc fsm.c main.c ics_writer.c -o reader -ansi -pedantic -Wall -Werror`
+`gcc fsm.c main.c ics_writer.c -o main -ansi -pedantic -Wall -Werror`
 
 ## Step 4: Running
 
