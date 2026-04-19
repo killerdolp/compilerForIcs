@@ -62,6 +62,6 @@ Run the program with the following command:
 
 `./reader`
 
-If your .html file is not named 'My Class Schedule.html', specify its exact filename when running:
+If you want to use a specific HTML file, enter its exact filename when running:
 
 `./reader <filename>.html`
