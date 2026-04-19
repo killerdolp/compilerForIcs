@@ -1,22 +1,22 @@
 CFLAGS = -ansi -pedantic -Wall -Werror 
-OFILES = fsm.o reader4.o ics_writer.o
-EXEFILES = reader4
+OFILES = fsm.o main.o ics_writer.o
+EXEFILES = main
 # DEFAULT_HTML = MyClassSchedule.html
 
 # all: $(DEFAULT_HTML)
 
-reader4: $(OFILES)
-	gcc $(OFILES) -o reader $(CFLAGS)
+main: $(OFILES)
+	gcc $(OFILES) -o main $(CFLAGS)
 
 FORCE:
 
-# %.html: reader4 FORCE
-# 	./reader4 "$@"
+# %.html: main FORCE
+# 	./main "$@"
 
 fsm.o: fsm.c
 	gcc -c fsm.c -o fsm.o $(CFLAGS)
-reader4.o: reader4.c
-	gcc -c reader4.c -o reader4.o $(CFLAGS)
+main.o: main.c
+	gcc -c main.c -o main.o $(CFLAGS)
 ics_writer.o: ics_writer.c
 	gcc -c ics_writer.c -o ics_writer.o $(CFLAGS)
 clean:
@@ -25,7 +25,7 @@ clean:
 .PHONY: all clean FORCE
 
 # all:
-# 	gcc -Wall -Wextra -o reader4 reader4.c
+# 	gcc -Wall -Wextra -o main main.c
 
 # clean:
-# 	rm -f reader4 *.o
+# 	rm -f main *.o

@@ -1,12 +1,3 @@
-/*
- * reader3.c  --  Extract raw schedule HTML blocks from MHTML timetable
- *
- * Build:
- *   gcc -Wall -Wextra -o reader4 reader4.c -lgnurx
- * Run:
- *   ./reader4 schedule.html
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
