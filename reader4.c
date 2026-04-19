@@ -199,15 +199,24 @@ int main(int argc, char *argv[]) {
 
     /* Array to store file names (simple version) */
 
-    while ((entry = readdir(dir)) != NULL) {
-        char *name = entry->d_name;
+/* If a file is provided, only process that file. Otherwise process all .html files. */
+    if (argc > 1) {
+        strncpy(html_files[0], argv[1], sizeof(html_files[0]) - 1);
+        html_files[0][sizeof(html_files[0]) - 1] = '\0';
+        count_files = 1;
+        printf("Using provided HTML file: %s\n", html_files[0]);
+    } else {
+        /* Array to store file names (simple version) */
+        while ((entry = readdir(dir)) != NULL) {
+            char *name = entry->d_name;
+            int len = strlen(name);
 
-        /* Check if file ends with ".html" */
-        int len = strlen(name);
-        if (len > 5 && strcmp(name + len - 5, ".html") == 0) {
-            strcpy(html_files[count_files], name);
-            printf("Found HTML file: %s\n", name);
-            count_files++;
+            /* Check if file ends with ".html" */
+            if (len > 5 && strcmp(name + len - 5, ".html") == 0) {
+                strcpy(html_files[count_files], name);
+                printf("Found HTML file: %s\n", name);
+                count_files++;
+            }
         }
     }
 
@@ -223,8 +232,7 @@ int main(int argc, char *argv[]) {
     
     for (k = 0; k < count_files; k++) {
         filename = html_files[k];
-        printf("Scanning file: %s\n", filename);
-
+        /* printf("Scanning file: %s\n", filename);*/
         /* load */
         fp = fopen(filename, "rb");
         if (!fp) { perror(filename); continue; }
@@ -259,7 +267,7 @@ int main(int argc, char *argv[]) {
         free(html);
     }
 
-    printf("Total blocks found in all files: %d\n\n", total_blocks_all_files);
+/*     printf("Total blocks found in all files: %d\n\n", total_blocks_all_files); */
 
     /* Allocate eventList once for all files */
     eventList = calloc((size_t)total_blocks_all_files, sizeof(Event));
