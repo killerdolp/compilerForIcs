@@ -60,8 +60,8 @@ or:
 
 Run the program with the following command:
 
-`./reader`
+`./main`
 
 If you want to use a specific HTML file, enter its exact filename when running:
 
-`./reader <filename>.html`
+`./main <filename>.html`
